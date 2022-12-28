@@ -23,10 +23,6 @@
 #define TIMEOUT_WIFI_CONNECT SEC_MS * 8
 #endif
 
-#ifndef DEFFAULT_AP_PASS
-#define DEFFAULT_AP_PASS "12345678"
-#endif
-
 #ifndef PARAM_SSID_LENGTH
 #define PARAM_SSID_LENGTH 25
 #endif
@@ -38,10 +34,6 @@
 #ifndef PARAM_DEVICE_LENGTH
 #define PARAM_DEVICE_LENGTH 30
 #endif
-
-class WifiCtrl;
-
-typedef void (*OnWifiChangedEvent)(WifiCtrl*);
 
 class WifiCtrl
 {

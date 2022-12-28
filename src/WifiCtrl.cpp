@@ -60,7 +60,10 @@ bool WifiCtrl::_connectTo(const char *ssid, const char *psw)
         return false;
 
     _wifi->disconnect();
+    
+    _wifi->enableAP(false);
     _wifi->enableSTA(true);
+
     _wifi->setHostname(_deviceName);
     _wifi->begin(ssid, psw);
 
@@ -99,7 +102,7 @@ WifiCtrl::WifiCtrl(WiFiClass* wifi, bool useAPMode, const char *ssid, const char
 #endif
  
 void WifiCtrl::begin(const char *deviceName,  const char *ssid, const char *pass)
-{    
+{       
     _tsReconnect = 0;
     strcat(_ssidSTA, ssid);    
     strcat(_passSTA, pass);
@@ -154,9 +157,10 @@ void WifiCtrl::_createAP(const char *ssid, const char *psw)
         return;
 
     _wifi->softAPdisconnect();
+    _wifi->enableSTA(false);
     _wifi->enableAP(true);
-    _wifi->softAP(ssid, psw);             
     _wifi->softAPConfig(IPAddress(192, 168, 1, 1), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 0, 0));
+    _wifi->softAP(ssid, psw);             
 }
 
 void WifiCtrl::_printDebugInfo(){
@@ -179,12 +183,12 @@ void WifiCtrl::_checkWifiConnection()
     }        
 
     if (_useAPMode) {   
-        _createAP(_ssidDefault, _passDefault);      
+        _createAP(_ssidDefault, _passDefault);
         _printDebugInfo();
               
     } else {
         if (_connectTo(_ssidDefault, _passDefault))
-           _printDebugInfo();
+            _printDebugInfo();
     }   
 }
 
