@@ -58,8 +58,6 @@ bool WifiCtrl::_connectTo(const char *ssid, const char *psw)
 {            
     if (strlen(ssid) == 0)
         return false;
-
-    _wifi->disconnect();
     
     _wifi->enableAP(false);
     _wifi->enableSTA(true);
@@ -69,7 +67,7 @@ bool WifiCtrl::_connectTo(const char *ssid, const char *psw)
 
     unsigned long timeout = millis() + TIMEOUT_WIFI_CONNECT;
     while ((timeout > millis()) && (!_wifi->isConnected())){
-        delay(50);
+        delay(500);
     };
 
     return _wifi->isConnected();
@@ -115,7 +113,10 @@ void WifiCtrl::begin(const char *deviceName,  const char *ssid, const char *pass
 
     #ifdef ESP8266
     wifiDisconnectHandler = _wifi->onStationModeDisconnected([&](const WiFiEventStationModeDisconnected &event){
-        _wifi->disconnect();
+        if (_wifi->isConnected()){
+            _wifi->disconnect();
+             Serial.println("Disconnect");
+        }
         _tsReconnect = 0;
     });
     
@@ -177,21 +178,26 @@ void WifiCtrl::_printDebugInfo(){
 
 void WifiCtrl::_checkWifiConnection()
 { 
-    if (_connectTo(_ssidSTA, _passSTA)){
-        _printDebugInfo();
-        return;
-    }        
+    if (_wifi->scanNetworks(false, true, 0, (uint8 *) _ssidSTA) > 0){    
+        if (_connectTo(_ssidSTA, _passSTA)){
+            _printDebugInfo();
+            return;
+        }        
+    }
 
     if (_useAPMode) {   
         _createAP(_ssidDefault, _passDefault);
         _printDebugInfo();
               
     } else {
-        if (_connectTo(_ssidDefault, _passDefault))
-            _printDebugInfo();
+        if (_wifi->scanNetworks(false, true, 0, (uint8 *) _ssidDefault) > 0) 
+        {
+            if (_connectTo(_ssidDefault, _passDefault))
+                _printDebugInfo();
+        }
     }   
+    
 }
-
 
 bool WifiCtrl::loop(){
     if ((_tsReconnect == 0) || (millis() > _tsReconnect))
@@ -203,6 +209,8 @@ bool WifiCtrl::loop(){
         _tsReconnect = millis() + TIMEOUT_WIFI_CHECK_STATE; 
     }
     
+    
+
     #ifdef ESP8266
     if (_wifi->isConnected()){
         MDNS.update();
